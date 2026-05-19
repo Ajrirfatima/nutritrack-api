@@ -14,7 +14,7 @@ A RESTful API built with Ruby on Rails for managing children's nutrition and mea
 
 ## Tech Stack
 
-- **Ruby on Rails 7.1** — API mode
+- **Ruby on Rails 7.2** — API mode
 - **PostgreSQL** — primary database
 - **Devise + devise-jwt** — authentication
 - **RSpec** — testing
@@ -24,8 +24,8 @@ A RESTful API built with Ruby on Rails for managing children's nutrition and mea
 
 ### Requirements
 
-- Ruby 3.2+
-- PostgreSQL 14+
+- Ruby 3.1+
+- PostgreSQL 15+
 - Bundler
 
 ### Setup
