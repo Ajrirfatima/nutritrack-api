@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Child Details - Nutritrack</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo">🍎 Nutritrack</a>
+            <ul class="nav-links">
+                <li><a href="/pages/dashboard.html">Dashboard</a></li>
+                <li><a href="/pages/add-child.html">Add Child</a></li>
+                <li><a href="#" onclick="logout()">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h2>Child Details</h2>
+            </div>
+            <div class="card-body">
+                <div id="loading" class="loading">Loading...</div>
+                <div id="childDetails" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const childId = urlParams.get('id');
+
+        if (!localStorage.getItem('auth_token')) {
+            window.location.href = '/pages/login.html';
+        }
+
+        async function loadChildDetails() {
+            try {
+                const result = await ChildrenAPI.getById(childId);
+                const child = result.child;
+                
+                const html = `
+                    <div class="grid-2">
+                        <div>
+                            <strong>Name:</strong> ${escapeHtml(child.name)}
+                        </div>
+                        <div>
+                            <strong>Age:</strong> ${child.age} years
+                        </div>
+                        <div>
+                            <strong>Dietary Restriction:</strong> ${child.dietary_restriction || 'None'}
+                        </div>
+                        <div>
+                            <strong>Daily Calorie Goal:</strong> ${child.daily_calorie_goal} kcal
+                        </div>
+                        <div>
+                            <strong>Created:</strong> ${new Date(child.created_at).toLocaleDateString()}
+                        </div>
+                        <div>
+                            <strong>Notes:</strong> ${escapeHtml(child.notes) || 'No notes'}
+                        </div>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <button onclick="editChild(${child.id})" style="background: #28a745;">Edit</button>
+                        <button onclick="window.location.href='/pages/dashboard.html'" style="background: #6c757d;">Back</button>
+                    </div>
+                `;
+                
+                document.getElementById('loading').style.display = 'none';
+                const container = document.getElementById('childDetails');
+                container.innerHTML = html;
+                container.style.display = 'block';
+            } catch (error) {
+                document.getElementById('loading').innerHTML = 'Error loading child details';
+            }
+        }
+
+        function editChild(id) {
+            window.location.href = `/pages/edit-child.html?id=${id}`;
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+
+        async function logout() {
+            try {
+                await AuthAPI.logout();
+                localStorage.removeItem('auth_token');
+                window.location.href = '/';
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        }
+
+        loadChildDetails();
+    </script>
+    <script src="/js/api.js"></script>
+</body>
+</html>

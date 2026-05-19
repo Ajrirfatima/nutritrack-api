@@ -1,10 +1,10 @@
 Rails.application.routes.draw do
   devise_for :users,
-    path: "",
+    path: "api/v1/auth",
     path_names: {
-      sign_in: "api/v1/auth/login",
-      sign_out: "api/v1/auth/logout",
-      registration: "api/v1/auth/register"
+      sign_in: "login",
+      sign_out: "logout",
+      registration: "register"
     },
     controllers: {
       sessions: "api/v1/auth/sessions",

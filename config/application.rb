@@ -16,6 +16,13 @@ module NutritrackApi
     # Common ones are `templates`, `generators`, or `middleware`, for example.
     config.autoload_lib(ignore: %w[assets tasks])
 
+    # these middleware for sessions and cookies
+    config.middleware.use ActionDispatch::Cookies
+    config.middleware.use ActionDispatch::Session::CookieStore, key: '_nutritrack_session'
+    
+    # Configure session store
+    config.session_store :cookie_store, key: '_nutritrack_session'
+    
     # Configuration for the application, engines, and railties goes here.
     #
     # These settings can be overridden in specific environments using the files

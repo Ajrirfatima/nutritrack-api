@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Nutritrack</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo">🍎 Nutritrack</a>
+            <ul class="nav-links">
+                <li><a href="/pages/dashboard.html">Dashboard</a></li>
+                <li><a href="/pages/add-child.html">Add Child</a></li>
+                <li><a href="#" onclick="handleLogout()">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h2>My Children</h2>
+            </div>
+            <div class="card-body">
+                <div id="message"></div>
+                <div id="loading" class="loading">Loading...</div>
+                <div id="childrenList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script>
+        // Make logout function global
+        window.handleLogout = async function() {
+            console.log('Logging out...');
+            try {
+                await window.AuthAPI.logout();
+                console.log('Logout successful');
+            } catch (error) {
+                console.error('Logout error:', error);
+            } finally {
+                // Always clear local storage and redirect
+                localStorage.removeItem('auth_token');
+                localStorage.clear();
+                window.location.href = '/pages/login.html';
+            }
+        };
+
+        // Check authentication on page load
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('Dashboard loading...');
+            
+            // Check if user is logged in
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                console.log('No token found, redirecting to login');
+                window.location.href = '/pages/login.html';
+                return;
+            }
+
+            // Load children
+            await loadChildren();
+        });
+
+        async function loadChildren() {
+            try {
+                console.log('Loading children...');
+                const result = await window.ChildrenAPI.getAll();
+                console.log('Children loaded:', result);
+                displayChildren(result.children);
+            } catch (error) {
+                console.error('Error loading children:', error);
+                if (error.message.includes('token') || error.message.includes('401')) {
+                    window.location.href = '/pages/login.html';
+                } else {
+                    showMessage(error.message, 'error');
+                    document.getElementById('loading').style.display = 'none';
+                }
+            }
+        }
+
+        function displayChildren(children) {
+            const container = document.getElementById('childrenList');
+            const loading = document.getElementById('loading');
+            
+            if (!children || children.length === 0) {
+                loading.style.display = 'none';
+                container.innerHTML = '<p style="text-align: center;">No children added yet. <a href="/pages/add-child.html">Add your first child!</a></p>';
+                return;
+            }
+
+            let html = `
+                <table style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Age</th>
+                            <th>Dietary Restriction</th>
+                            <th>Daily Calories Goal</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            children.forEach(child => {
+                html += `
+                    <tr>
+                        <td>${escapeHtml(child.name)}</td>
+                        <td>${child.age} years</td>
+                        <td>${child.dietary_restriction || 'None'}</td>
+                        <td>${child.daily_calorie_goal} kcal</td>
+                        <td class="actions">
+                            <button class="btn-view" onclick="viewChild(${child.id})">View</button>
+                            <button class="btn-edit" onclick="editChild(${child.id})">Edit</button>
+                            <button class="btn-delete" onclick="deleteChild(${child.id})">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `</tbody>
+                </table>`;
+            
+            loading.style.display = 'none';
+            container.innerHTML = html;
+        }
+
+        async function deleteChild(id) {
+            if (confirm('Are you sure you want to delete this child?')) {
+                try {
+                    await window.ChildrenAPI.delete(id);
+                    showMessage('Child deleted successfully!', 'success');
+                    await loadChildren();
+                } catch (error) {
+                    showMessage(error.message, 'error');
+                }
+            }
+        }
+
+        function viewChild(id) {
+            window.location.href = `/pages/child-details.html?id=${id}`;
+        }
+
+        function editChild(id) {
+            window.location.href = `/pages/edit-child.html?id=${id}`;
+        }
+
+        function showMessage(msg, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+            setTimeout(() => {
+                messageDiv.innerHTML = '';
+            }, 3000);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+
+        // Make functions available globally
+        window.viewChild = viewChild;
+        window.editChild = editChild;
+        window.deleteChild = deleteChild;
+    </script>
+</body>
+</html>

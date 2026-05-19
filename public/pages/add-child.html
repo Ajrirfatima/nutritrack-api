@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Child - Nutritrack</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo">🍎 Nutritrack</a>
+            <ul class="nav-links">
+                <li><a href="/pages/dashboard.html">Dashboard</a></li>
+                <li><a href="/pages/add-child.html">Add Child</a></li>
+                <li><a href="#" onclick="logout()">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="card" style="max-width: 600px; margin: 0 auto;">
+            <div class="card-header">
+                <h2>Add New Child</h2>
+            </div>
+            <div class="card-body">
+                <div id="message"></div>
+                <form id="addChildForm">
+                    <div class="form-group">
+                        <label for="name">Child's Name *</label>
+                        <input type="text" id="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="age">Age *</label>
+                        <input type="number" id="age" min="1" max="17" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="dietary_restriction">Dietary Restriction</label>
+                        <select id="dietary_restriction">
+                            <option value="none">None</option>
+                            <option value="vegetarian">Vegetarian</option>
+                            <option value="vegan">Vegan</option>
+                            <option value="gluten_free">Gluten Free</option>
+                            <option value="dairy_free">Dairy Free</option>
+                            <option value="nut_free">Nut Free</option>
+                            <option value="halal">Halal</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="notes">Notes (Optional)</label>
+                        <textarea id="notes" rows="3"></textarea>
+                    </div>
+                    <button type="submit">Add Child</button>
+                    <button type="button" onclick="window.location.href='/pages/dashboard.html'" style="background: #6c757d;">Cancel</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check authentication
+        if (!localStorage.getItem('auth_token')) {
+            window.location.href = '/pages/login.html';
+        }
+
+        document.getElementById('addChildForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const childData = {
+                name: document.getElementById('name').value,
+                age: parseInt(document.getElementById('age').value),
+                dietary_restriction: document.getElementById('dietary_restriction').value,
+                notes: document.getElementById('notes').value
+            };
+
+            try {
+                const result = await ChildrenAPI.create(childData);
+                showMessage('Child added successfully! Redirecting...', 'success');
+                setTimeout(() => {
+                    window.location.href = '/pages/dashboard.html';
+                }, 1500);
+            } catch (error) {
+                showMessage(error.message, 'error');
+            }
+        });
+
+        function showMessage(msg, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+            setTimeout(() => {
+                messageDiv.innerHTML = '';
+            }, 3000);
+        }
+
+        async function logout() {
+            try {
+                await AuthAPI.logout();
+                localStorage.removeItem('auth_token');
+                window.location.href = '/';
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        }
+    </script>
+    <script src="/js/api.js"></script>
+</body>
+</html>

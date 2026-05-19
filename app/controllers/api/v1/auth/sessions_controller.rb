@@ -3,10 +3,12 @@ module Api
     module Auth
       class SessionsController < Devise::SessionsController
         respond_to :json
+        skip_before_action :verify_signed_out_user, only: :destroy
 
-        private
-
-        def respond_with(resource, _opts = {})
+        def create
+          self.resource = warden.authenticate!(auth_options)
+          sign_in(resource_name, resource)
+          
           render json: {
             message: "Logged in successfully",
             user: {
@@ -17,29 +19,19 @@ module Api
           }, status: :ok
         end
 
-        def respond_to_on_destroy
-          render json: { message: "Logged out successfully" }, status: :ok
+        def destroy
+          if current_user
+            sign_out(current_user)
+            render json: { message: "Logged out successfully" }, status: :ok
+          else
+            render json: { message: "Already logged out" }, status: :ok
+          end
         end
-      end
-
-      class RegistrationsController < Devise::RegistrationsController
-        respond_to :json
 
         private
 
-        def respond_with(resource, _opts = {})
-          if resource.persisted?
-            render json: {
-              message: "Account created successfully",
-              user: {
-                id: resource.id,
-                name: resource.name,
-                email: resource.email
-              }
-            }, status: :created
-          else
-            render json: { errors: resource.errors.full_messages }, status: :unprocessable_entity
-          end
+        def respond_to_on_destroy
+          head :no_content
         end
       end
     end

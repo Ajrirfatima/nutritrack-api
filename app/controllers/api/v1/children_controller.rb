@@ -1,18 +1,24 @@
 module Api
   module V1
     class ChildrenController < ApplicationController
+      before_action :authenticate_user!
       before_action :set_child, only: [:show, :update, :destroy]
+      before_action :force_json_format
 
       def index
-        children = current_user.children
-        children = children.by_age(params[:age]) if params[:age].present?
-        children = children.with_restriction(params[:dietary_restriction]) if params[:dietary_restriction].present?
-        children = children.page(params[:page]).per(params[:per_page] || 10)
+        if current_user
+          children = current_user.children
+          children = children.by_age(params[:age]) if params[:age].present?
+          children = children.with_restriction(params[:dietary_restriction]) if params[:dietary_restriction].present?
+          children = children.page(params[:page]).per(params[:per_page] || 10)
 
-        render json: {
-          children: children.map { |c| child_json(c) },
-          meta: pagination_meta(children)
-        }
+          render json: {
+            children: children.map { |c| child_json(c) },
+            meta: pagination_meta(children)
+          }
+        else
+          render json: { error: "User not authenticated" }, status: :unauthorized
+        end
       end
 
       def show
@@ -57,6 +63,10 @@ module Api
         data[:notes] = child.notes if detailed
         data[:meal_plans_count] = child.meal_plans.count if detailed
         data
+      end
+
+      def force_json_format
+        request.format = :json
       end
     end
   end

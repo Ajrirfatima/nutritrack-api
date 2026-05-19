@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Nutritrack API Test</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .section { margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; }
+        input, button { margin: 5px; padding: 5px; }
+        pre { background: #f4f4f4; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Nutritrack API Test Interface</h1>
+    
+    <div class="section">
+        <h2>1. Register</h2>
+        <input type="text" id="reg_email" placeholder="Email">
+        <input type="text" id="reg_name" placeholder="Name">
+        <input type="password" id="reg_password" placeholder="Password">
+        <button onclick="register()">Register</button>
+    </div>
+    
+    <div class="section">
+        <h2>2. Login</h2>
+        <input type="text" id="login_email" placeholder="Email">
+        <input type="password" id="login_password" placeholder="Password">
+        <button onclick="login()">Login</button>
+    </div>
+    
+    <div class="section">
+        <h2>3. Get Children</h2>
+        <button onclick="getChildren()">Get Children</button>
+    </div>
+    
+    <div class="section">
+        <h2>4. Create Child</h2>
+        <input type="text" id="child_name" placeholder="Name">
+        <input type="number" id="child_age" placeholder="Age">
+        <select id="child_diet">
+            <option value="none">None</option>
+            <option value="vegetarian">Vegetarian</option>
+            <option value="vegan">Vegan</option>
+            <option value="gluten_free">Gluten Free</option>
+        </select>
+        <button onclick="createChild()">Create Child</button>
+    </div>
+    
+    <div class="section">
+        <h2>Response</h2>
+        <pre id="response">Click a button to see response...</pre>
+    </div>
+
+    <script>
+        let authToken = localStorage.getItem('token');
+        
+        async function register() {
+            const response = await fetch('/api/v1/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user: {
+                        email: document.getElementById('reg_email').value,
+                        password: document.getElementById('reg_password').value,
+                        name: document.getElementById('reg_name').value
+                    }
+                })
+            });
+            const data = await response.json();
+            document.getElementById('response').innerText = JSON.stringify(data, null, 2);
+        }
+        
+        async function login() {
+            const response = await fetch('/api/v1/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user: {
+                        email: document.getElementById('login_email').value,
+                        password: document.getElementById('login_password').value
+                    }
+                })
+            });
+            const data = await response.json();
+            authToken = response.headers.get('Authorization');
+            if (authToken) {
+                localStorage.setItem('token', authToken);
+                document.getElementById('response').innerText = 'Logged in! Token saved.\n' + JSON.stringify(data, null, 2);
+            } else {
+                document.getElementById('response').innerText = JSON.stringify(data, null, 2);
+            }
+        }
+        
+        async function getChildren() {
+            const token = localStorage.getItem('token');
+            const response = await fetch('/api/v1/children', {
+                headers: { 'Authorization': token }
+            });
+            const data = await response.json();
+            document.getElementById('response').innerText = JSON.stringify(data, null, 2);
+        }
+        
+        async function createChild() {
+            const token = localStorage.getItem('token');
+            const response = await fetch('/api/v1/children', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token
+                },
+                body: JSON.stringify({
+                    child: {
+                        name: document.getElementById('child_name').value,
+                        age: parseInt(document.getElementById('child_age').value),
+                        dietary_restriction: document.getElementById('child_diet').value
+                    }
+                })
+            });
+            const data = await response.json();
+            document.getElementById('response').innerText = JSON.stringify(data, null, 2);
+        }
+    </script>
+</body>
+</html>

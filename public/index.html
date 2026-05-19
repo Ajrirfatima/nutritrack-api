@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nutritrack - Child Nutrition Management</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo">🍎 Nutritrack</a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="/pages/login.html">Login</a></li>
+                <li><a href="/pages/register.html">Register</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h2>Welcome to Nutritrack!</h2>
+            </div>
+            <div class="card-body">
+                <p>Your child nutrition management system.</p>
+                <div id="authMessage"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script>
+        // Check if user is logged in
+        const token = localStorage.getItem('auth_token');
+        const navLinks = document.getElementById('navLinks');
+        const authMessage = document.getElementById('authMessage');
+        
+        if (token) {
+            navLinks.innerHTML = `
+                <li><a href="/pages/dashboard.html">Dashboard</a></li>
+                <li><a href="#" onclick="handleLogout()">Logout</a></li>
+            `;
+            authMessage.innerHTML = '<div class="alert alert-success">You are logged in! <a href="/pages/dashboard.html">Go to Dashboard</a></div>';
+        } else {
+            authMessage.innerHTML = '<p>Please <a href="/pages/login.html">login</a> or <a href="/pages/register.html">register</a> to get started.</p>';
+        }
+        
+        window.handleLogout = async function() {
+            console.log('Logging out...');
+            try {
+                await window.AuthAPI.logout();
+            } catch (error) {
+                console.error('Logout error:', error);
+            } finally {
+                localStorage.removeItem('auth_token');
+                localStorage.clear();
+                window.location.href = '/';
+            }
+        };
+    </script>
+</body>
+</html>
